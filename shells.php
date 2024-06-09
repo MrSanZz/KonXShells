@@ -1,3 +1,25 @@
+<?php
+// Daftar User-Agent yang akan diberikan respon 404 Not Found
+$blockedUserAgents = [
+    'Googlebot', 'Slurp', 'MSNBot', 'PycURL', 'facebookexternalhit',
+    'ia_archiver', 'crawler', 'Yandex', 'Rambler', 'Yahoo! Slurp',
+    'YahooSeeker', 'bingbot', 'curl'
+];
+
+// Mendapatkan User-Agent dari permintaan
+$userAgent = $_SERVER['HTTP_USER_AGENT'];
+
+// Memeriksa apakah User-Agent yang diterima ada dalam daftar yang diblokir
+foreach ($blockedUserAgents as $blockedUserAgent) {
+    if (stripos($userAgent, $blockedUserAgent) !== false) {
+        // Mengatur header respon ke 404 Not Found
+        header("HTTP/1.0 404 Not Found");
+        echo "404 Not Found";
+        exit;
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html>
 <head>
